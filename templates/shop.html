@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="search">
+    <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary rounded mb-4 shadow-md">
+        <div class="container-fluid">
+            <form id="search" class="d-flex" action="{{ url_for('shop') }}" method="GET">
+                <input class="form-control me-2 flex-grow-1 rounded-pill border-0 py-2 px-3" type="search" name="q" placeholder="Search" aria-label="Search" value="{% if query %}{{ query }}{% endif %}">
+                <button class="btn btn-outline-primary">Search</button>
+            </form>
+        </div>
+    </nav>
+</div>
+
+<div class="dropdown mb-4">
+    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        კატეგორიები
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="/category/1">სათვალეები</a></li>
+        <li><a class="dropdown-item" href="/category/2">ქუდები</a></li>
+        <li><a class="dropdown-item" href="/category/3">ჯამერები</a></li>
+    </ul>
+</div>
+<div class="products">
+    {% if products %}
+    <div class="row row-cols-xl-4 row-cols-lg-3 row-cols-md-3 row-cols-sm-2">
+        {% for product in products %}
+        <div class="col mb-4">
+            <div class="card h-100 border-black shadow-sm">
+                <img src="{{ product.file }}" class="card-img-top" alt="{{ product.name }}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-truncate">{{ product.name }}</h5>
+                            <p class="card-text">{{ product.price }} ლარი</p>
+                            {% if current_user.is_authenticated %}
+                            <div class="position-absolute top-0 end-0 mt-2 me-2">
+                                <button class="heart-button {% if product.id in liked_products %}red{% endif %}" data-product-id="{{ product.id }}">❤</button>
+                            </div>
+                            {% endif %}
+                            <div class="mt-auto">
+                                <div class="product-btns">
+                                    {% if current_user.role == 'admin' %}
+                                    <a href="/delete/{{ product.id }}" class="btn btn-danger ms-2">Delete</a>
+                                    <a href="/edit/{{ product.id }}" class="btn btn-primary ms-2">Edit</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('details', id=product.id) }}" class="btn btn-success btn-sm details-button">დეტალები</a>
+                                    {% if current_user.is_authenticated %}
+                                        {% if current_user.role != 'admin' %}
+                                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-primary btn-sm">კალათაში დამატება</a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+        <h4 class="noproducts" style="text-align: center;">ასეთი პროდუქტი ვერ მოიძებნა</h4>
+        {% endif %}
+    </div> 
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const heartButtons = document.querySelectorAll('.heart-button');
+    
+        async function handleClick(event) {
+            const button = event.currentTarget;
+            const productId = button.dataset.productId;
+            
+            const response = await fetch('/like_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ product_id: productId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.liked) {
+                button.classList.add('red');
+            } else {
+                button.classList.remove('red');
+            }
+            
+            updateButtonStyle(button);
+        }
+    
+        function updateButtonStyle(button) {
+            if (button.classList.contains('red')) {
+                button.style.color = 'red';
+                button.style.webkitTextStroke = '1px red';
+            } else {
+                button.style.color = 'white';
+                button.style.webkitTextStroke = '1px black';
+            }
+        }
+    
+        heartButtons.forEach(button => {
+            button.addEventListener('click', handleClick);
+            button.addEventListener('mouseover', function() {
+                if (!button.classList.contains('red')) {
+                    button.style.color = 'red';
+                }
+            });
+            button.addEventListener('mouseout', function() {
+                if (!button.classList.contains('red')) {
+                    button.style.color = 'white';
+                }
+            });
+        });
+    });
+    </script>    
+
+{% endblock %}

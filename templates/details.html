@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class="details justify-content-center align-items-center">
+    <div class="row">
+        <div class="col d-flex justify-content-center">
+            <div class="card" style="width: 18rem;">
+                <img src="{{ product.file }}" class="card-img-top" alt="Product Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text">{{ product.price }}ლარი</p>
+                    <a href="#" class="btn btn-primary">Buy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
