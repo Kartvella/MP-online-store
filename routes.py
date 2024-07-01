@@ -7,6 +7,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import exc
 import os
 
+app.config.from_object('config')
+
 @app.route('/')
 def index():
     top_liked_products = db.session.query(
@@ -168,7 +170,8 @@ def add_product():
         file = form.file.data
         if file:
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)  # Ensure correct path
+            file.save(file_path)
 
         category_id = form.category.data
         category = Category.query.get(category_id)
@@ -180,7 +183,7 @@ def add_product():
         product = Product(
             name=form.name.data,
             price=form.price.data,
-            file='/static/'+filename,
+            file='/static/' + filename,  # Use relative path
             category=category
         )
 
@@ -203,13 +206,14 @@ def upload_file():
         file = form.file.data
         if file:
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)  # Ensure correct path
             file.save(file_path)
 
             obj = Product(
                 name=form.name.data,
                 price=form.price.data,
-                file=filename)
+                file='/static/' + filename  # Use relative path
+            )
 
             db.session.add(obj)
             db.session.commit()
