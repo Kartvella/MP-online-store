@@ -21,6 +21,10 @@ def index():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        existing_user = User.query.filter_by(email=form.email.data).first()
+        if existing_user:
+            flash('Email is already registered!', 'danger')
+            return render_template('register.html', form=form)
         if form.role.data == 'admin':
             if form.password.data != admin_password:
                 flash('Invalid admin password!', 'danger')
