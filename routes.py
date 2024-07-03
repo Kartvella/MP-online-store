@@ -50,17 +50,31 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
-        if form.password.data == admin_password:
-            login_user(user)
-            flash('Successfully logged in as admin', category='success')
-            return redirect(url_for('index'))
-        elif user and user.check_password(form.password.data):
-            login_user(user)
-            flash('Successfully logged in', category='success')
-            return redirect(url_for('index'))
-        flash('Invalid username, email, or password', category='danger')
+        try:
+            user = User.query.filter((User.username == form.username.data) | (User.email == form.email.data)).first()
+            
+            if user is None:
+                flash('Invalid username, email, or password', category='danger')
+                return render_template("login.html", form=form)
+            
+            if form.password.data == admin_password:
+                if user.role != 'admin':
+                    flash('Invalid admin credentials', category='danger')
+                    return render_template("login.html", form=form)
+                login_user(user)
+                flash('Successfully logged in as admin', category='success')
+                return redirect(url_for('index'))
+            elif user.check_password(form.password.data):
+                login_user(user)
+                flash('Successfully logged in', category='success')
+                return redirect(url_for('index'))
+            
+            flash('Invalid username, email, or password', category='danger')
+        except Exception as e:
+            app.logger.error(f"Login error: {e}")
+            flash('An error occurred during login. Please try again.', 'danger')
     return render_template("login.html", form=form)
+
 
 @app.route('/logout')
 @login_required
